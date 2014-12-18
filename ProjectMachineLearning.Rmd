@@ -1,0 +1,100 @@
+---
+Practical Machine Learning - Course project
+
+Riccardo Sorrentino
+---
+***Practical Machine Learning - Course project***
+
+**Riccardo Sorrentino**
+
+The aim of the project is to create a prediction model about the quality performances of six amateur athletes. Their activity, barbell lifts, is assessed with a rating betweeen A and E. The prediction model will use data from accelerometers on the belt, forearm, arm and dumbell.
+
+**Executive Summary**
+
+A good outcome, with an accuracy rate around 99%, can be obtained using a random forest model on 52 variables. The results on the test data are B A B A A E D B A A B C B A E E A B B B, and appear to be correct.
+
+**Downloading and setting data tables**
+
+The first step has been to install the caret package and download both the training and the testing data
+```{r, message=FALSE}
+library(caret)
+```
+```{r}
+setInternet2(use=TRUE)
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile="./projectml.csv")
+projectml <- read.csv("projectml.csv")
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile="./testingml.csv")
+testingml <- read.csv("testingml.csv")
+```
+
+To perform cross validation, the training data set has been divided in two parts: the model training set, and a cross validation set.
+
+```{r}
+set.seed(2702)
+inTrain <- createDataPartition(projectml$classe, p=0.7, list=FALSE)
+training <- projectml[inTrain,]
+CValidation <- projectml[-inTrain,]
+```
+
+A first look on the training data shows that the first seven columns describe each single exercise (name of the athlete, date, time, etc.) and are useless for prediction. Those columns have been deleted from the training set.
+```{r}
+head(training[,1:7], 4)
+```
+```{r}
+r <- dim(training)[2]
+training <- training[,(8:r)]
+
+```
+
+**Deleting useless predictors**
+
+A more accurate look of the data shows that in many columns appear NAs values, so they are useless for prediction. Those columns have been deleted.
+```{r}
+training <- training[ , colSums(is.na(training)) == 0]
+```
+At the point the training set has 86 columns. It could be useful to perform a near zero variance analysis to further reduce the number of predictors.
+```{r}
+nsv <- nearZeroVar(training, saveMetrics=FALSE)
+nsv
+training <- training[,-nsv]
+```
+The columns with limited variance have been deleted. Now the training set has 53 columns: 52 predictors and one outcome.
+
+**Creating the model: 1. a tree model**
+
+The outcome is a rating of the activity quality, so the first hypothesis is to use a tree model.
+```{r}
+set.seed(1001)
+modFitHyp <- train(classe ~ ., method="rpart", data=training)
+modFitHyp
+```
+The resulting accuracy rate of 0.50 is quite low.
+
+**Creating the model: 2. a random forest model**
+
+To obtain a better accuracy rate it is useful to try a random forest model.
+```{r}
+set.seed(1001)
+modFit <- train(classe ~ ., method="rf", data=training, allowParallel = TRUE)
+modFit
+modFit$finalModel
+```
+The accuracy rate of 0.9885 is quite good. Preprocessing doesn't improve the model performance. 
+
+**Cross Validation analysis**
+
+The random forest model has been tested on the cross validation set. The out  of sample error is predicted to be more than 0.0115 (1 - the accuracy rate) even if a confusion matrix on the training set shows an in-sample-error of zero.
+
+```{r}
+pred <- predict(modFit, CValidation)
+print(confusionMatrix(pred, CValidation$classe))
+```
+The effective out-of-sample error is 0.0061, very low.
+
+**The final outcome**
+
+At this point it is possible to apply the model to the testing set and obtain the final outcome.
+```{r}
+answers <- predict(modFit, testingml)
+answers
+```
