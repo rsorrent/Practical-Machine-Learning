@@ -1,13 +1,14 @@
 ---
-Practical Machine Learning - Course project
-
-Riccardo Sorrentino
+title: "ProjectMachineLearning"
+output: md_document
+      
 ---
+
 ***Practical Machine Learning - Course project***
 
 **Riccardo Sorrentino**
 
-The aim of the project is to create a prediction model about the quality performances of six amateur athletes. Their activity, barbell lifts, is assessed with a rating betweeen A and E. The prediction model will use data from accelerometers on the belt, forearm, arm and dumbell.
+The aim of the project is to create a prediction model about the quality performances of six amateur athletes. Their activity, barbell lifts, is assessed with a rating betweeen A and E. The prediction model will use data from accelerometers on the belt, forearm, arm and -dumbell.
 
 **Executive Summary**
 
@@ -19,7 +20,7 @@ The first step has been to install the caret package and download both the train
 ```{r, message=FALSE}
 library(caret)
 ```
-```{r}
+```{r, warning=FALSE}
 setInternet2(use=TRUE)
 download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile="./projectml.csv")
 projectml <- read.csv("projectml.csv")
